@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visite Flash Réseau - Audit par exception</title>
+  <style>
+    :root {
+      --bg: #eef3f5;
+      --surface: #ffffff;
+      --surface-soft: #f6fafb;
+      --line: #d9e2e7;
+      --text: #17252d;
+      --muted: #5f727d;
+      --brand: #0f766e;
+      --brand-soft: #d7f3f0;
+      --good-bg: #dcfce7;
+      --good-text: #166534;
+      --warn-bg: #fff4d1;
+      --warn-text: #9a5a00;
+      --bad-bg: #fee2e2;
+      --bad-text: #991b1b;
+      --shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(15, 118, 110, 0.10), transparent 28%),
+        linear-gradient(180deg, #f8fbfc 0%, var(--bg) 100%);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      max-width: 100%;
+    }
+
+    .wrap {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero,
+    .audit-shell,
+    .photos-section,
+    .followup-section {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 1.4fr 0.9fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 16px 0 8px;
+      font-size: clamp(32px, 4vw, 42px);
+      line-height: 1.05;
+    }
+
+    .hero-sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.55;
+      max-width: 760px;
+    }
+
+    .hero-meta {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .meta-card,
+    .score-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--surface-soft);
+      padding: 14px 16px;
+    }
+
+    .meta-label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .meta-value {
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .score-card {
+      display: grid;
+      gap: 14px;
+    }
+
+    .score-big {
+      font-size: 72px;
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin: 0;
+    }
+
+    .status-chip,
+    .mini-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .mini-chip {
+      background: #eef4f7;
+      color: var(--muted);
+      padding: 6px 10px;
+    }
+
+    .score-notes {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .note-box {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      background: white;
+    }
+
+    .note-value {
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 1;
+      margin-top: 4px;
+    }
+
+    .progress-track {
+      height: 12px;
+      background: #e5edf1;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: var(--brand);
+      border-radius: inherit;
+      transition: width 0.2s ease;
+    }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.95fr);
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .main-column,
+    .side-column {
+      display: grid;
+      gap: 20px;
+      align-content: start;
+    }
+
+    .audit-shell,
+    .photos-section,
+    .followup-section {
+      padding: 24px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .section-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .header-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="time"],
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 13px 14px;
+      background: white;
+      color: var(--text);
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .director-box textarea {
+      min-height: 180px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .field-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .block-grid {
+      display: grid;
+      gap: 16px;
+      margin-top: 22px;
+    }
+
+    .block-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, #ffffff 0%, #fbfdfe 100%);
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .block-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .block-title {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .block-caption {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .block-score {
+      min-width: 94px;
+      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      background: var(--surface-soft);
+    }
+
+    .block-score strong {
+      display: block;
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .choice-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .choice-btn {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+      padding: 14px 12px;
+      text-align: center;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .choice-btn.active.ok {
+      background: var(--good-bg);
+      color: var(--good-text);
+      border-color: #b4e4c1;
+    }
+
+    .choice-btn.active.warn {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      border-color: #f1d99e;
+    }
+
+    .choice-btn.active.bad {
+      background: var(--bad-bg);
+      color: var(--bad-text);
+      border-color: #efb9b9;
+    }
+
+    .exception-panel {
+      display: none;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      gap: 14px;
+    }
+
+    .block-card.expanded .exception-panel {
+      display: grid;
+    }
+
+    .exception-panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .exception-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .exception-item {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface-soft);
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .exception-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-weight: 900;
+    }
+
+    .exception-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .voice-field {
+      grid-column: 1 / -1;
+    }
+
+    .voice-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .voice-btn {
+      min-width: 54px;
+      min-height: 54px;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--brand);
+      color: white;
+      font-size: 22px;
+      line-height: 1;
+      box-shadow: 0 10px 26px rgba(15, 118, 110, 0.22);
+    }
+
+    .voice-btn.listening {
+      background: var(--bad-text);
+      animation: pulseMic 1s infinite;
+    }
+
+    @keyframes pulseMic {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    .photo-box {
+      border: 2px dashed #c6d3da;
+      border-radius: 18px;
+      padding: 14px;
+      background: #fafcfd;
+      display: grid;
+      gap: 10px;
+    }
+
+    .photo-box.has-photo {
+      border-style: solid;
+    }
+
+    .photo-status {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .photo-preview {
+      display: none;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #e8f0f3;
+    }
+
+    .photo-box.has-photo .photo-preview {
+      display: block;
+    }
+
+    .photo-preview img {
+      display: block;
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .action-row,
+    .history-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary-btn {
+      background: var(--brand);
+      color: white;
+      box-shadow: 0 10px 26px rgba(15, 118, 110, 0.22);
+    }
+
+    .secondary-btn {
+      background: #e8eff2;
+      color: var(--text);
+    }
+
+    .ghost-btn {
+      background: white;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .tiny-btn {
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--surface-soft);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+
+    th,
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f4f8fa;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .live-row td {
+      background: #fbfcfd;
+    }
+
+    .table-textarea {
+      width: 100%;
+      min-height: 86px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: white;
+      font: inherit;
+      resize: vertical;
+    }
+
+    .pdf-hint {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .empty-state {
+      padding: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 1100px) {
+      .page-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .wrap { padding: 16px; }
+      .hero { grid-template-columns: 1fr; padding: 22px; }
+      .header-fields,
+      .exception-grid,
+      .photo-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      html,
+      body {
+        width: 100%;
+        overflow-x: hidden;
+      }
+
+      .wrap {
+        padding: 10px;
+        width: 100%;
+      }
+
+      .hero,
+      .audit-shell,
+      .photos-section,
+      .followup-section {
+        border-radius: 20px;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1fr;
+        padding: 16px;
+        gap: 16px;
+      }
+
+      .badge {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+        white-space: normal;
+        line-height: 1.35;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+
+      .hero-sub {
+        font-size: 14px;
+      }
+
+      .hero-meta {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .score-card {
+        padding: 16px;
+      }
+
+      .score-big {
+        font-size: 56px;
+      }
+
+      .score-notes {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .page-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .main-column,
+      .side-column {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .audit-shell,
+      .photos-section,
+      .followup-section {
+        padding: 14px;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .section-head {
+        display: grid;
+        grid-template-columns: 1fr;
+        margin-bottom: 12px;
+      }
+
+      .section-title {
+        font-size: 20px;
+      }
+
+      .section-subtitle {
+        font-size: 13px;
+      }
+
+      .header-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .field,
+      .field.full {
+        width: 100%;
+        min-width: 0;
+        grid-column: auto;
+      }
+
+      .field-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 54px;
+        align-items: center;
+      }
+
+      .field-head .voice-btn {
+        width: 54px;
+        min-width: 54px;
+        height: 54px;
+        min-height: 54px;
+        border-radius: 50%;
+        justify-self: end;
+      }
+
+      input[type="text"],
+      input[type="date"],
+      input[type="time"],
+      textarea,
+      select {
+        min-height: 48px;
+        padding: 12px;
+        border-radius: 14px;
+        font-size: 16px;
+      }
+
+      .director-box textarea {
+        min-height: 130px;
+      }
+
+      .block-grid {
+        display: flex;
+        flex-direction: column;
+        margin-top: 14px;
+        gap: 12px;
+      }
+
+      .block-card {
+        width: 100%;
+        min-width: 0;
+        padding: 14px;
+        border-radius: 18px;
+      }
+
+      .block-head {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .block-score {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        text-align: left;
+      }
+
+      .block-score strong {
+        font-size: 24px;
+      }
+
+      .choice-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .choice-btn {
+        min-height: 52px;
+        width: 100%;
+        font-size: 16px;
+      }
+
+      .exception-panel {
+        width: 100%;
+        min-width: 0;
+        padding-top: 12px;
+      }
+
+      .exception-panel-head {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .exception-list,
+      .exception-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .voice-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .voice-row .voice-btn {
+        width: 100%;
+        min-height: 50px;
+        border-radius: 14px;
+      }
+
+      .exception-item {
+        width: 100%;
+        min-width: 0;
+        padding: 12px;
+        border-radius: 16px;
+      }
+
+      .photo-preview img {
+        height: 190px;
+      }
+
+      .photo-box {
+        width: 100%;
+        min-width: 0;
+        padding: 12px;
+        border-radius: 16px;
+      }
+
+      .photo-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .photo-box input[type="file"] {
+        width: 100%;
+        min-height: 46px;
+        font-size: 15px;
+      }
+
+      .history-tools,
+      .action-row {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .history-tools button,
+      .action-row button {
+        width: 100%;
+      }
+
+      .table-wrap {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        overflow: visible;
+      }
+
+      table,
+      thead,
+      tbody,
+      tr,
+      th,
+      td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--surface-soft);
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+
+      td {
+        border-bottom: 0;
+        padding: 6px 0;
+      }
+
+      td > * {
+        width: 100%;
+      }
+
+      td:nth-child(1)::before { content: "Date"; }
+      td:nth-child(2)::before { content: "Magasin"; }
+      td:nth-child(3)::before { content: "Score"; }
+      td:nth-child(4)::before { content: "CR"; }
+
+      td::before {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: 800;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .live-row td {
+        background: transparent;
+      }
+
+      .table-textarea {
+        min-width: 0;
+        min-height: 90px;
+        font-size: 16px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero-meta,
+      .score-notes {
+        grid-template-columns: 1fr;
+      }
+
+      .score-big {
+        font-size: 58px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      h1 {
+        font-size: 26px;
+      }
+
+      .meta-card,
+      .score-card,
+      .note-box {
+        padding: 12px;
+      }
+
+      .score-big {
+        font-size: 48px;
+      }
+
+      .note-value {
+        font-size: 22px;
+      }
+
+      .block-title {
+        font-size: 18px;
+      }
+
+      .block-caption {
+        font-size: 13px;
+      }
+
+      .photo-preview img {
+        height: 170px;
+      }
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 12mm;
+    }
+
+    @media print {
+      body {
+        background: white;
+        color: #111827;
+        font-size: 10.5px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .wrap {
+        max-width: none;
+        padding: 0;
+      }
+
+      h1 {
+        margin: 6px 0;
+        font-size: 24px;
+      }
+
+      .hero-sub,
+      .section-subtitle,
+      .block-caption,
+      .pdf-hint {
+        font-size: 10px;
+        line-height: 1.35;
+      }
+
+      .hero,
+      .audit-shell,
+      .photos-section,
+      .followup-section {
+        box-shadow: none;
+        border-color: #cfd8df;
+        border-radius: 14px;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.35fr 0.65fr;
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .badge {
+        padding: 5px 8px;
+        font-size: 9px;
+      }
+
+      .hero-meta,
+      .score-notes {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .meta-card,
+      .score-card,
+      .note-box {
+        border-radius: 10px;
+        padding: 8px;
+      }
+
+      .score-card {
+        gap: 8px;
+      }
+
+      .score-big {
+        font-size: 42px;
+      }
+
+      .note-value {
+        font-size: 18px;
+      }
+
+      .progress-track {
+        height: 8px;
+      }
+
+      .page-grid {
+        display: block;
+        margin-top: 8px;
+      }
+
+      .main-column,
+      .side-column {
+        display: block;
+      }
+
+      .audit-shell,
+      .photos-section,
+      .followup-section {
+        margin-top: 8px;
+        padding: 12px;
+      }
+
+      .section-head {
+        margin-bottom: 8px;
+      }
+
+      .section-title {
+        font-size: 17px;
+      }
+
+      .header-fields {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      input[type="text"],
+      input[type="date"],
+      input[type="time"],
+      textarea,
+      select,
+      .table-textarea {
+        border-color: #cfd8df;
+        border-radius: 8px;
+        padding: 7px 8px;
+        font-size: 10.5px;
+        background: white;
+        color: #111827;
+        box-shadow: none;
+      }
+
+      textarea {
+        min-height: 52px;
+        overflow: hidden;
+        resize: none;
+      }
+
+      .director-box textarea {
+        min-height: 76px;
+      }
+
+      .block-grid {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .block-card {
+        padding: 10px;
+        border-radius: 12px;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .block-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 145px;
+        gap: 10px;
+        align-items: start;
+      }
+
+      .block-title {
+        font-size: 15px;
+      }
+
+      .block-score {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+        padding: 8px;
+        border-radius: 10px;
+      }
+
+      .block-score strong {
+        font-size: 20px;
+      }
+
+      .action-row,
+      .history-tools,
+      .no-print {
+        display: none !important;
+      }
+
+      .choice-row {
+        display: flex;
+        gap: 6px;
+        margin-top: 2px;
+      }
+
+      .choice-btn {
+        display: none;
+        transform: none !important;
+        padding: 6px 9px;
+        min-height: 0;
+        border-radius: 999px;
+        font-size: 10px;
+      }
+
+      .choice-btn.active {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+      }
+
+      .exception-panel {
+        padding-top: 8px;
+      }
+
+      .exception-panel-head {
+        margin-bottom: 4px;
+      }
+
+      .empty-state {
+        display: none;
+      }
+
+      .exception-list {
+        gap: 8px;
+      }
+
+      .exception-item {
+        padding: 9px;
+        border-radius: 10px;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .exception-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .voice-field {
+        grid-column: 1 / -1;
+      }
+
+      .voice-row {
+        display: block;
+      }
+
+      .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .photo-box:not(.has-photo) {
+        display: none;
+      }
+
+      .photo-box input,
+      .photo-status {
+        display: none !important;
+      }
+
+      .photo-box {
+        padding: 8px;
+        border-radius: 10px;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .photo-preview {
+        display: block;
+      }
+
+      .photo-preview img {
+        height: 135px;
+        object-fit: cover;
+      }
+
+      .table-wrap {
+        overflow: visible;
+        border-radius: 10px;
+      }
+
+      table {
+        display: table !important;
+        width: 100%;
+        min-width: 0;
+        border-collapse: collapse;
+      }
+
+      thead {
+        display: table-header-group !important;
+      }
+
+      tbody {
+        display: table-row-group !important;
+      }
+
+      tr {
+        display: table-row !important;
+        border: 0;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      th,
+      td {
+        display: table-cell !important;
+        width: auto;
+        padding: 7px;
+        border: 1px solid #cfd8df;
+        vertical-align: top;
+      }
+
+      td::before {
+        content: none !important;
+        display: none !important;
+      }
+
+      th {
+        background: #eef3f5;
+        font-size: 9px;
+      }
+
+      td:nth-child(1) {
+        width: 24%;
+      }
+
+      td:nth-child(2) {
+        width: 18%;
+      }
+
+      td:nth-child(3) {
+        width: 10%;
+      }
+
+      td:nth-child(4) {
+        width: 48%;
+      }
+
+      .table-textarea {
+        min-height: 44px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <span class="badge">Réseau boulangerie • audit par exception</span>
+        <h1><span id="heroStore">Bain</span> — Visite terrain</h1>
+        <p class="hero-sub">
+          Version allégée pour Samuel : 4 blocs, 3 niveaux, et détail seulement en cas d’exception.
+          L’objectif est de boucler la visite en 5 à 8 minutes.
+        </p>
+        <div class="hero-meta">
+          <div class="meta-card"><div class="meta-label">Magasin</div><div class="meta-value" id="metaStore">Bain</div></div>
+          <div class="meta-card"><div class="meta-label">Date</div><div class="meta-value" id="metaDate">—</div></div>
+          <div class="meta-card"><div class="meta-label">Heure</div><div class="meta-value" id="metaTime">—</div></div>
+          <div class="meta-card"><div class="meta-label">Auditeur</div><div class="meta-value" id="metaAuditor">Samuel</div></div>
+        </div>
+      </div>
+      <div class="score-card">
+        <div>
+          <div class="meta-label">Score global</div>
+          <div class="score-big" id="globalScore">100</div>
+          <div class="status-chip" id="globalStatus">Bon niveau</div>
+        </div>
+        <div class="progress-track"><div class="progress-bar" id="globalProgress"></div></div>
+        <div class="score-notes">
+          <div class="note-box">
+            <div class="meta-label">Blocs OK</div>
+            <div class="note-value" id="okCount">4</div>
+          </div>
+          <div class="note-box">
+            <div class="meta-label">Exceptions</div>
+            <div class="note-value" id="exceptionCount">0</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="page-grid">
+      <div class="main-column">
+        <section class="audit-shell">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Écran principal</h2>
+              <p class="section-subtitle">Uniquement les informations utiles et les 4 blocs à qualifier.</p>
+            </div>
+          </div>
+
+          <div class="header-fields">
+            <div class="field">
+              <label for="storeInput">Magasin</label>
+              <select id="storeInput">
+                <option selected>Bain</option>
+                <option>Bruz</option>
+                <option>Dinan</option>
+                <option>Lanester</option>
+                <option>Rennes Poterie</option>
+                <option>Rennes Villejean</option>
+                <option>Vezin-le-Coquet</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="auditorInput">Auditeur</label>
+              <select id="auditorInput">
+                <option selected>Samuel</option>
+                <option>Visiteur</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="dateInput">Date</label>
+              <input type="date" id="dateInput" />
+            </div>
+            <div class="field">
+              <label for="timeInput">Heure</label>
+              <input type="time" id="timeInput" />
+            </div>
+            <div class="field full" id="shortSummaryField">
+              <label for="shortSummaryInput">Synthèse courte</label>
+              <textarea id="shortSummaryInput" placeholder="Résumé rapide visible uniquement en mode Samuel."></textarea>
+            </div>
+            <div class="field full director-box">
+              <div class="field-head">
+                <label for="directorSummaryInput">Synthèse Directeur</label>
+                <button class="voice-btn no-print" id="directorVoiceBtn" type="button" title="Dicter la synthèse directeur">🎙</button>
+              </div>
+              <textarea id="directorSummaryInput" placeholder="Décisions, points clés direction, priorités et arbitrages."></textarea>
+            </div>
+          </div>
+
+          <div class="block-grid" id="blockGrid"></div>
+        </section>
+      </div>
+
+      <div class="side-column">
+        <section class="photos-section">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Photos obligatoires</h2>
+              <p class="section-subtitle">4 vues terrain visibles immédiatement et reprises dans le PDF.</p>
+            </div>
+          </div>
+          <div class="photo-grid" id="mandatoryPhotos"></div>
+        </section>
+
+        <section class="followup-section">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">SUIVI PAR MAGASIN CR</h2>
+              <p class="section-subtitle">Date, magasin et score synchronisés automatiquement.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Magasin</th>
+                  <th>Score</th>
+                  <th>CR</th>
+                </tr>
+              </thead>
+              <tbody id="followupBody"></tbody>
+            </table>
+          </div>
+          <div class="history-tools no-print">
+            <button class="secondary-btn" id="addFollowupBtn">Ajouter au suivi</button>
+            <button class="primary-btn" id="exportPdfBtn">Exporter PDF directeur</button>
+            <button class="ghost-btn" id="resetBtn">Réinitialiser</button>
+          </div>
+          <p class="pdf-hint">Titre automatique du document exporté : AAAA-MM-JJ_NOMMAGASIN_Audit</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORES = [
+      'Bain',
+      'Bruz',
+      'Dinan',
+      'Lanester',
+      'Rennes Poterie',
+      'Rennes Villejean',
+      'Vezin-le-Coquet'
+    ];
+
+    const BLOCKS = [
+      {
+        id: 'sanitaire',
+        title: 'Production',
+        weight: 0.35,
+        zones: [
+          'Réception / livraison',
+          'Réserve sèche',
+          'Chambres froides / congélateurs',
+          'Production boulangerie',
+          'Pâtisserie / viennoiserie / snacking',
+          'Plonge / nettoyage',
+          'Déchets / extérieur technique',
+          'Vestiaires / sanitaires'
+        ]
+      },
+      {
+        id: 'produit',
+        title: 'Produit',
+        weight: 0.35,
+        zones: [
+          'Pain',
+          'Viennoiserie',
+          'Pâtisserie',
+          'Snacking',
+          'Merchandising / offre'
+        ]
+      },
+      {
+        id: 'commerce',
+        title: 'Commerce / tenue magasin',
+        weight: 0.15,
+        zones: [
+          'Extérieur / façade',
+          'Salle / espace client',
+          'Vente / accueil',
+          'Encaissement'
+        ]
+      },
+      {
+        id: 'equipe',
+        title: 'Management / Équipe',
+        weight: 0.15,
+        zones: [
+          'Responsable magasin',
+          'Production',
+          'Vente',
+          'Fonctionnement d’équipe'
+        ]
+      }
+    ];
+
+    const STATUS_PENALTIES = {
+      ok: 0,
+      surveiller: 5,
+      non: 10
+    };
+
+    const MANDATORY_PHOTOS = [
+      { id: 'exterieur', label: 'Extérieur' },
+      { id: 'vitrine', label: 'Vitrine' },
+      { id: 'caisse', label: 'Caisse / accueil' },
+      { id: 'reserve', label: 'Réserve / production' }
+    ];
+
+    const state = {
+      store: STORES[0],
+      auditor: 'Samuel',
+      date: '',
+      time: '',
+      shortSummary: '',
+      directorSummary: '',
+      blocks: {},
+      photos: {},
+      followup: {
+        liveCr: '',
+        rows: []
+      }
+    };
+
+    BLOCKS.forEach(block => {
+      state.blocks[block.id] = {
+        status: 'ok',
+        exceptions: []
+      };
+    });
+
+    MANDATORY_PHOTOS.forEach(photo => {
+      state.photos[photo.id] = { fileName: '', dataUrl: '' };
+    });
+
+    function setNow() {
+      const now = new Date();
+      state.date = now.toISOString().slice(0, 10);
+      state.time = now.toTimeString().slice(0, 5);
+    }
+
+    function formatDateWithDay(value) {
+      if (!value) return '—';
+      const date = new Date(value + 'T00:00:00');
+      const day = date.toLocaleDateString('fr-FR', { weekday: 'long' });
+      const full = date.toLocaleDateString('fr-FR');
+      return day.charAt(0).toUpperCase() + day.slice(1) + ' ' + full;
+    }
+
+    function sanitizeFilePart(text) {
+      return (text || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    }
+
+    function getBlockPenalty(blockId) {
+      return state.blocks[blockId].exceptions.reduce((total, exception) => {
+        return total + (STATUS_PENALTIES[exception.level] || 0);
+      }, 0);
+    }
+
+    function getBlockScore(block) {
+      return Math.max(0, 100 - getBlockPenalty(block.id));
+    }
+
+    function computeGlobalScore() {
+      const totalPenalty = BLOCKS.reduce((total, block) => total + getBlockPenalty(block.id), 0);
+      return Math.max(0, 100 - totalPenalty);
+    }
+
+    function computeGlobalStatus(score) {
+      if (score >= 85) return 'Bon niveau';
+      if (score >= 70) return 'À surveiller';
+      return 'Inacceptable';
+    }
+
+    function getTone(status) {
+      if (status === 'Bon niveau' || status === 'ok') return { bg: 'var(--good-bg)', color: 'var(--good-text)' };
+      if (status === 'À surveiller' || status === 'surveiller') return { bg: 'var(--warn-bg)', color: 'var(--warn-text)' };
+      return { bg: 'var(--bad-bg)', color: 'var(--bad-text)' };
+    }
+
+    function renderStoreOptions() {
+      const select = document.getElementById('storeInput');
+      select.innerHTML = STORES.map(store => `<option value="${store}">${store}</option>`).join('');
+    }
+
+    function renderBlocks() {
+      const container = document.getElementById('blockGrid');
+      container.innerHTML = BLOCKS.map(block => {
+        const blockState = state.blocks[block.id];
+        const expanded = blockState.status !== 'ok';
+        const tone = getTone(blockState.status);
+        const blockPenalty = getBlockPenalty(block.id);
+        return `
+          <article class="block-card ${expanded ? 'expanded' : ''}" data-block-id="${block.id}">
+            <div class="block-head">
+              <div>
+                <h3 class="block-title">${block.title}</h3>
+                <p class="block-caption">Choisir simplement le niveau global du bloc. Le détail n’apparaît qu’en cas d’exception.</p>
+              </div>
+              <div class="block-score">
+                <div class="meta-label">Score bloc</div>
+                <strong>${getBlockScore(block)}</strong>
+                <div class="meta-label">-${blockPenalty} pts</div>
+                <span class="status-chip" style="background:${tone.bg};color:${tone.color};">${blockState.status === 'ok' ? 'OK' : blockState.status === 'surveiller' ? 'À surveiller' : 'Non conforme'}</span>
+              </div>
+            </div>
+
+            <div class="choice-row">
+              <button class="choice-btn ${blockState.status === 'ok' ? 'active ok' : ''}" data-role="block-status" data-block-id="${block.id}" data-value="ok">OK</button>
+              <button class="choice-btn ${blockState.status === 'surveiller' ? 'active warn' : ''}" data-role="block-status" data-block-id="${block.id}" data-value="surveiller">À surveiller</button>
+              <button class="choice-btn ${blockState.status === 'non' ? 'active bad' : ''}" data-role="block-status" data-block-id="${block.id}" data-value="non">Non conforme</button>
+            </div>
+
+            <div class="exception-panel">
+              <div class="exception-panel-head">
+                <div>
+                  <div class="meta-label">Détail du bloc concerné</div>
+                  <div class="section-subtitle">Ne renseigner que les exceptions observées.</div>
+                </div>
+                <button class="ghost-btn tiny-btn no-print" data-role="add-exception" data-block-id="${block.id}">Nouvelle fenêtre d’écart</button>
+              </div>
+              <div class="exception-list">
+                ${blockState.exceptions.length ? blockState.exceptions.map((exception, index) => renderException(block, exception, index)).join('') : '<div class="empty-state">Clique à nouveau sur À surveiller / Non conforme, ou sur Nouvelle fenêtre d’écart, pour ajouter une fiche.</div>'}
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderException(block, exception, index) {
+      const hasPhoto = Boolean(exception.photoDataUrl);
+      return `
+        <div class="exception-item" data-block-id="${block.id}" data-exception-index="${index}">
+          <div class="exception-title">
+            <span>Fenêtre d’écart ${index + 1}</span>
+            <span class="mini-chip">${exception.level === 'non' ? 'Non conforme -10' : 'À surveiller -5'}</span>
+          </div>
+          <div class="exception-grid">
+            <div class="field">
+              <label>Sous-zone concernée</label>
+              <select data-role="exception-zone">
+                <option value="">Choisir la sous-zone</option>
+                ${block.zones.map(zone => `<option value="${zone}" ${zone === exception.zone ? 'selected' : ''}>${zone}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field">
+              <label>Échéance</label>
+              <input type="date" data-role="exception-due" value="${exception.dueDate}" />
+            </div>
+            <div class="field voice-field">
+              <label>Commentaire court + action corrective</label>
+              <div class="voice-row">
+                <textarea data-role="exception-note" placeholder="Dicter ou saisir en une fois : constat + action corrective.">${exception.note || ''}</textarea>
+                <button class="voice-btn no-print" type="button" data-role="voice-note" title="Dicter avec le micro">🎙</button>
+              </div>
+            </div>
+          </div>
+          <div class="photo-box ${hasPhoto ? 'has-photo' : ''}">
+            <div class="meta-label">Photo</div>
+            <input type="file" accept="image/*" capture="environment" data-role="exception-photo" />
+            <div class="photo-status">${hasPhoto ? exception.photoName || 'Photo intégrée' : 'Aucune photo'}</div>
+            <div class="photo-preview">${hasPhoto ? `<img src="${exception.photoDataUrl}" alt="Exception ${block.title}" />` : ''}</div>
+          </div>
+          <div class="action-row no-print">
+            <button class="ghost-btn tiny-btn" data-role="remove-exception">Supprimer cette exception</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMandatoryPhotos() {
+      const container = document.getElementById('mandatoryPhotos');
+      container.innerHTML = MANDATORY_PHOTOS.map(photo => {
+        const data = state.photos[photo.id];
+        const hasPhoto = Boolean(data.dataUrl);
+        return `
+          <div class="photo-box ${hasPhoto ? 'has-photo' : ''}">
+            <div class="meta-label">${photo.label}</div>
+            <input type="file" accept="image/*" capture="environment" data-role="mandatory-photo" data-photo-id="${photo.id}" />
+            <div class="photo-status">${hasPhoto ? data.fileName || 'Photo intégrée' : 'Photo manquante'}</div>
+            <div class="photo-preview">${hasPhoto ? `<img src="${data.dataUrl}" alt="${photo.label}" />` : ''}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderFollowup() {
+      const body = document.getElementById('followupBody');
+      const score = computeGlobalScore();
+      body.innerHTML = `
+        <tr class="live-row">
+          <td>${formatDateWithDay(state.date)}</td>
+          <td>${state.store}</td>
+          <td>${score}</td>
+          <td><textarea class="table-textarea" id="liveCrInput" placeholder="Samuel complète le CR ici...">${state.followup.liveCr}</textarea></td>
+        </tr>
+        ${state.followup.rows.map((row, index) => `
+          <tr data-row-index="${index}">
+            <td>${row.date}</td>
+            <td>${row.store}</td>
+            <td>${row.score}</td>
+            <td><textarea class="table-textarea" data-role="history-cr">${row.cr}</textarea></td>
+          </tr>
+        `).join('')}
+      `;
+    }
+
+    function refreshSummary() {
+      const score = computeGlobalScore();
+      const status = computeGlobalStatus(score);
+      const tone = getTone(status);
+      const okCount = BLOCKS.filter(block => state.blocks[block.id].status === 'ok').length;
+      const exceptionCount = BLOCKS.reduce((total, block) => {
+        const exceptions = state.blocks[block.id].status === 'ok'
+          ? 0
+          : state.blocks[block.id].exceptions.length;
+        return total + exceptions;
+      }, 0);
+
+      document.getElementById('heroStore').textContent = state.store;
+      document.getElementById('metaStore').textContent = state.store;
+      document.getElementById('metaDate').textContent = formatDateWithDay(state.date);
+      document.getElementById('metaTime').textContent = state.time || '—';
+      document.getElementById('metaAuditor').textContent = state.auditor || '—';
+      document.getElementById('globalScore').textContent = score;
+      document.getElementById('globalStatus').textContent = status;
+      document.getElementById('globalStatus').style.background = tone.bg;
+      document.getElementById('globalStatus').style.color = tone.color;
+      document.getElementById('globalProgress').style.width = score + '%';
+      document.getElementById('okCount').textContent = okCount;
+      document.getElementById('exceptionCount').textContent = exceptionCount;
+    }
+
+    function updateAuditorMode() {
+      const isVisitor = state.auditor === 'Visiteur';
+      const shortSummaryField = document.getElementById('shortSummaryField');
+      const shortSummaryInput = document.getElementById('shortSummaryInput');
+      shortSummaryField.classList.toggle('hidden', isVisitor);
+      shortSummaryInput.disabled = isVisitor;
+    }
+
+    function bindHeaderValues() {
+      document.getElementById('storeInput').value = state.store;
+      document.getElementById('auditorInput').value = state.auditor;
+      document.getElementById('dateInput').value = state.date;
+      document.getElementById('timeInput').value = state.time;
+      document.getElementById('shortSummaryInput').value = state.shortSummary;
+      document.getElementById('directorSummaryInput').value = state.directorSummary;
+      updateAuditorMode();
+      const liveCr = document.getElementById('liveCrInput');
+      if (liveCr) liveCr.value = state.followup.liveCr;
+    }
+
+    function refreshAll() {
+      refreshSummary();
+      renderBlocks();
+      renderMandatoryPhotos();
+      renderFollowup();
+      bindHeaderValues();
+    }
+
+    function createBlankException(level = 'surveiller') {
+      return { level, zone: '', note: '', dueDate: '', photoName: '', photoDataUrl: '' };
+    }
+
+    function focusException(blockId, index) {
+      const selector = `.exception-item[data-block-id="${blockId}"][data-exception-index="${index}"]`;
+      const item = document.querySelector(selector);
+      if (!item) return;
+      item.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const firstField = item.querySelector('select, textarea, input');
+      if (firstField) firstField.focus({ preventScroll: true });
+    }
+
+    function addException(blockId) {
+      const level = state.blocks[blockId].status === 'non' ? 'non' : 'surveiller';
+      state.blocks[blockId].exceptions.push(createBlankException(level));
+      const newIndex = state.blocks[blockId].exceptions.length - 1;
+      refreshAll();
+      setTimeout(() => focusException(blockId, newIndex), 0);
+    }
+
+    function addFollowupRow() {
+      state.followup.rows.push({
+        date: formatDateWithDay(state.date),
+        store: state.store,
+        score: String(computeGlobalScore()),
+        cr: ''
+      });
+      refreshAll();
+    }
+
+    function mandatoryPhotosComplete() {
+      return MANDATORY_PHOTOS.every(photo => state.photos[photo.id].dataUrl);
+    }
+
+    function exportPdf() {
+      if (!mandatoryPhotosComplete()) {
+        alert('Ajoute d’abord les 4 photos obligatoires avant l’export PDF.');
+        return;
+      }
+      document.title = `${state.date || 'date'}_${sanitizeFilePart(state.store)}_Audit`;
+      window.print();
+    }
+
+    function resetTool() {
+      if (!confirm('Réinitialiser la visite en cours ?')) return;
+      setNow();
+      state.store = STORES[0];
+      state.auditor = 'Samuel';
+      state.shortSummary = '';
+      state.directorSummary = '';
+      BLOCKS.forEach(block => {
+        state.blocks[block.id] = {
+          status: 'ok',
+          exceptions: []
+        };
+      });
+      MANDATORY_PHOTOS.forEach(photo => {
+        state.photos[photo.id] = { fileName: '', dataUrl: '' };
+      });
+      state.followup.liveCr = '';
+      refreshAll();
+    }
+
+    function readImage(file, callback) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = event => callback(event.target.result);
+      reader.readAsDataURL(file);
+    }
+
+    function startSpeechToTextarea(button, textarea, onTextAdded) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert('La dictée vocale n’est pas disponible dans ce navigateur. Essaie Chrome ou Safari récent avec l’autorisation micro.');
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+
+      recognition.lang = 'fr-FR';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      button.classList.add('listening');
+      button.textContent = '●';
+
+      recognition.onresult = event => {
+        const spokenText = event.results[0][0].transcript.trim();
+        const prefix = textarea.value.trim() ? '\n' : '';
+        textarea.value = textarea.value + prefix + spokenText;
+        onTextAdded(textarea.value);
+      };
+
+      recognition.onerror = event => {
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          alert('Micro refusé. Autorise l’accès au micro dans ton navigateur pour utiliser la dictée.');
+          return;
+        }
+        alert('Dictée vocale indisponible pour le moment. Tu peux saisir le texte au clavier.');
+      };
+
+      recognition.onend = () => {
+        button.classList.remove('listening');
+        button.textContent = '🎙';
+      };
+
+      recognition.start();
+    }
+
+    function startVoiceInput(button) {
+      const item = button.closest('.exception-item');
+      const blockId = item.dataset.blockId;
+      const index = Number(item.dataset.exceptionIndex);
+      const textarea = item.querySelector('[data-role="exception-note"]');
+      startSpeechToTextarea(button, textarea, value => {
+        state.blocks[blockId].exceptions[index].note = value;
+        refreshSummary();
+      });
+    }
+
+    function startDirectorVoiceInput() {
+      const button = document.getElementById('directorVoiceBtn');
+      const textarea = document.getElementById('directorSummaryInput');
+      startSpeechToTextarea(button, textarea, value => {
+        state.directorSummary = value;
+      });
+    }
+
+    function attachEvents() {
+      document.addEventListener('input', event => {
+        const target = event.target;
+
+        if (target.id === 'storeInput') state.store = target.value;
+        if (target.id === 'auditorInput') state.auditor = target.value;
+        if (target.id === 'dateInput') state.date = target.value;
+        if (target.id === 'timeInput') state.time = target.value;
+        if (target.id === 'shortSummaryInput') state.shortSummary = target.value;
+        if (target.id === 'directorSummaryInput') state.directorSummary = target.value;
+        if (target.id === 'liveCrInput') state.followup.liveCr = target.value;
+
+        if (target.dataset.role === 'history-cr') {
+          const row = target.closest('[data-row-index]');
+          state.followup.rows[Number(row.dataset.rowIndex)].cr = target.value;
+        }
+
+        if (target.closest('.exception-item')) {
+          const item = target.closest('.exception-item');
+          const blockId = item.dataset.blockId;
+          const index = Number(item.dataset.exceptionIndex);
+          const exception = state.blocks[blockId].exceptions[index];
+          if (target.dataset.role === 'exception-zone') exception.zone = target.value;
+          if (target.dataset.role === 'exception-note') exception.note = target.value;
+          if (target.dataset.role === 'exception-due') exception.dueDate = target.value;
+        }
+
+        refreshSummary();
+      });
+
+      document.addEventListener('change', event => {
+        const target = event.target;
+
+        if (target.id === 'auditorInput') {
+          state.auditor = target.value;
+          refreshAll();
+        }
+
+        if (target.dataset.role === 'mandatory-photo') {
+          const photoId = target.dataset.photoId;
+          readImage(target.files[0], dataUrl => {
+            state.photos[photoId] = {
+              fileName: target.files[0].name,
+              dataUrl
+            };
+            refreshAll();
+          });
+        }
+
+        if (target.dataset.role === 'exception-photo') {
+          const item = target.closest('.exception-item');
+          const blockId = item.dataset.blockId;
+          const index = Number(item.dataset.exceptionIndex);
+          readImage(target.files[0], dataUrl => {
+            state.blocks[blockId].exceptions[index].photoName = target.files[0].name;
+            state.blocks[blockId].exceptions[index].photoDataUrl = dataUrl;
+            refreshAll();
+          });
+        }
+      });
+
+      document.addEventListener('click', event => {
+        const target = event.target;
+
+        if (target.dataset.role === 'block-status') {
+          const blockId = target.dataset.blockId;
+          state.blocks[blockId].status = target.dataset.value;
+          if (target.dataset.value === 'ok') {
+            state.blocks[blockId].exceptions = [];
+            refreshAll();
+            return;
+          }
+          state.blocks[blockId].exceptions.push(createBlankException(target.dataset.value));
+          const newIndex = state.blocks[blockId].exceptions.length - 1;
+          refreshAll();
+          setTimeout(() => focusException(blockId, newIndex), 0);
+        }
+
+        if (target.dataset.role === 'add-exception') {
+          addException(target.dataset.blockId);
+        }
+
+        if (target.dataset.role === 'voice-note') {
+          startVoiceInput(target);
+        }
+
+        if (target.dataset.role === 'remove-exception') {
+          const item = target.closest('.exception-item');
+          const blockId = item.dataset.blockId;
+          const index = Number(item.dataset.exceptionIndex);
+          state.blocks[blockId].exceptions.splice(index, 1);
+          refreshAll();
+        }
+      });
+
+      document.getElementById('addFollowupBtn').addEventListener('click', addFollowupRow);
+      document.getElementById('exportPdfBtn').addEventListener('click', exportPdf);
+      document.getElementById('resetBtn').addEventListener('click', resetTool);
+      document.getElementById('directorVoiceBtn').addEventListener('click', startDirectorVoiceInput);
+    }
+
+    function prepareTextareasForPrint() {
+      document.querySelectorAll('textarea').forEach(textarea => {
+        textarea.dataset.printHeight = textarea.style.height || '';
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight + 4}px`;
+      });
+    }
+
+    function restoreTextareasAfterPrint() {
+      document.querySelectorAll('textarea').forEach(textarea => {
+        textarea.style.height = textarea.dataset.printHeight || '';
+        delete textarea.dataset.printHeight;
+      });
+    }
+
+    function attachPrintHelpers() {
+      window.addEventListener('beforeprint', prepareTextareasForPrint);
+      window.addEventListener('afterprint', restoreTextareasAfterPrint);
+    }
+
+    function init() {
+      setNow();
+      renderStoreOptions();
+      attachEvents();
+      attachPrintHelpers();
+      refreshAll();
+    }
+
+    init();
+  </script>
+</body>
+</html>
